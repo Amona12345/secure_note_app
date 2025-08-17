@@ -6,7 +6,7 @@ data class Note(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
     val body: String,
-    val timestamp: Long,
+    val timestamp: Long=System.currentTimeMillis(),
     val isPrivate: Boolean = false
 
 )

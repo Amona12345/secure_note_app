@@ -1,0 +1,12 @@
+package com.example.securenotes
+
+syntax = "proto3";
+
+option java_package = "com.securenotes.data";
+option java_multiple_files = true;
+
+message UserPreferences {
+    bool dark_mode = 1;
+    int32 font_size = 2;
+    bool auto_save = 3;
+}

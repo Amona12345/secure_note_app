@@ -4,6 +4,7 @@ import androidx.room.Query
 import androidx.room.Insert
 import androidx.room.Delete
 import androidx.room.OnConflictStrategy
+import androidx.room.Update
 import com.example.securenotes.data.db.entities.Note
 import kotlinx.coroutines.flow.Flow
 
@@ -20,6 +21,8 @@ interface NoteDao {
 
     @Delete
     suspend fun delete(note: Note)
+    @Update
+    suspend fun update(note: Note)
 
     @Query("SELECT id, title, '' AS body, timestamp, isPrivate FROM note WHERE isPrivate = 1 ORDER BY timestamp DESC")
     fun getPrivateListProjection(): Flow<List<Note>>
