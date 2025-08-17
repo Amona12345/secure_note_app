@@ -11,10 +11,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.securenotes.UiState
 import com.example.securenotes.data.db.entities.UserPreferences
-import com.example.securenotes.services.UserPreferencesSerializer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
