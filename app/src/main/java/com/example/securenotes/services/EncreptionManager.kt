@@ -1,4 +1,4 @@
-package com.example.securenotes.data
+package com.example.securenotes.services
 
 import android.content.Context
 import android.content.SharedPreferences

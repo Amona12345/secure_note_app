@@ -5,8 +5,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.SavedStateHandle
-import com.example.securenotes.data.EncryptionManager
-import com.example.securenotes.data.FileExportManager
+import com.example.securenotes.services.EncryptionManager
+import com.example.securenotes.services.FileExportManager
 import com.example.securenotes.data.db.AppDatabase
 import com.example.securenotes.data.db.dao.NoteDao
 import com.example.securenotes.data.repo.CoreNotesRepository
@@ -23,7 +23,6 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 class DependencyContainer(private val context: Context) {
 
-    // Core dependencies (you'll need to implement these based on your existing code)
     private val noteDao: NoteDao by lazy {
         return@lazy AppDatabase.get(context).noteDao()
     }
@@ -40,7 +39,6 @@ class DependencyContainer(private val context: Context) {
         context.dataStore
     }
 
-    // Repository instances
     private val coreNotesRepository: CoreNotesRepository by lazy {
         CoreNotesRepository(noteDao, encryptionManager)
     }
@@ -61,12 +59,10 @@ class DependencyContainer(private val context: Context) {
         PreferencesRepository(dataStore)
     }
 
-    // ViewModel instances
     val settingsViewModel: SettingsViewModel by lazy {
         SettingsViewModel(preferencesRepository, coreNotesRepository)
     }
 
-    // ViewModel factory functions
     fun createNoteEditViewModel(savedStateHandle: SavedStateHandle): NoteEditViewModel {
         return NoteEditViewModel(noteEditRepository, preferencesRepository, savedStateHandle)
     }

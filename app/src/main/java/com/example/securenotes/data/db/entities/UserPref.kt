@@ -1,6 +1,5 @@
 package com.example.securenotes.data.db.entities
 
-// UserPreferences.kt
 
 import kotlinx.serialization.Serializable
 

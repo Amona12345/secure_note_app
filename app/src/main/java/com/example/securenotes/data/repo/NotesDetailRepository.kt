@@ -1,7 +1,7 @@
 package com.example.securenotes.data.repo
 
 import com.example.securenotes.UiState
-import com.example.securenotes.data.FileExportManager
+import com.example.securenotes.services.FileExportManager
 import com.example.securenotes.data.db.entities.Note
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

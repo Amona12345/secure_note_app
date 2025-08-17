@@ -1,20 +1,25 @@
-package com.example.securenotes.ui.theme
+package com.example.securenotes.ui.screens
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.example.securenotes.UiState
+import com.example.securenotes.ui.items.PasswordEntryDialog
+
+import com.example.securenotes.ui.theme.ErrorView
+import com.example.securenotes.ui.theme.LoadingView
+import com.example.securenotes.ui.theme.LockedNoteView
+import com.example.securenotes.ui.theme.NoteContent
 import com.example.securenotes.viewModel.NoteDetailViewModel
-import java.util.*
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteDetailScreen(
@@ -22,15 +27,17 @@ fun NoteDetailScreen(
     onNavigateToEdit: () -> Unit,
     viewModel: NoteDetailViewModel // Pass viewModel as parameter
 ) {
-    val context = LocalContext.current
 
     val uiState by viewModel.uiState.collectAsState()
     val deleteState by viewModel.deleteState.collectAsState()
     val exportState by viewModel.exportState.collectAsState()
+    val isUnlocked by viewModel.isUnlocked.collectAsState()
 
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
+    var showEditPasswordDialog by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf(false) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/plain")
@@ -38,7 +45,6 @@ fun NoteDetailScreen(
         uri?.let { viewModel.exportNote(it) }
     }
 
-    // Handle delete success
     LaunchedEffect(deleteState) {
         if (deleteState is UiState.Success) {
             onNavigateBack()
@@ -54,7 +60,15 @@ fun NoteDetailScreen(
                 }
             },
             actions = {
-                IconButton(onClick = onNavigateToEdit) {
+                IconButton(
+                    onClick = {
+                        if (viewModel.canEdit()) {
+                            onNavigateToEdit()
+                        } else {
+                            showEditPasswordDialog = true
+                        }
+                    }
+                ) {
                     Icon(Icons.Default.Edit, "Edit")
                 }
                 IconButton(onClick = { showExportDialog = true }) {
@@ -74,7 +88,7 @@ fun NoteDetailScreen(
             is UiState.Success -> {
                 val note = (uiState as UiState.Success).data
                 if (note != null) {
-                    if (note.isPrivate && viewModel.isPasswordProtected()) {
+                    if (note.isPrivate && !isUnlocked) {
                         LockedNoteView(
                             onUnlock = { showPasswordDialog = true }
                         )
@@ -100,24 +114,46 @@ fun NoteDetailScreen(
         }
     }
 
-    // Password Dialog
     if (showPasswordDialog) {
         PasswordEntryDialog(
+            title = "Enter Password to View Note",
+            errorMessage = if (passwordError) "Incorrect password" else null,
             onPasswordEntered = { password ->
                 if (viewModel.unlockNote(password)) {
                     showPasswordDialog = false
+                    passwordError = false
                 } else {
-                    // Show error - incorrect password
+                    passwordError = true
                 }
             },
             onDismiss = {
                 showPasswordDialog = false
+                passwordError = false
                 onNavigateBack()
             }
         )
     }
 
-    // Delete Dialog
+    if (showEditPasswordDialog) {
+        PasswordEntryDialog(
+            title = "Enter Password to Edit Note",
+            errorMessage = if (passwordError) "Incorrect password" else null,
+            onPasswordEntered = { password ->
+                if (viewModel.unlockNote(password)) {
+                    showEditPasswordDialog = false
+                    passwordError = false
+                    onNavigateToEdit()
+                } else {
+                    passwordError = true
+                }
+            },
+            onDismiss = {
+                showEditPasswordDialog = false
+                passwordError = false
+            }
+        )
+    }
+
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -141,7 +177,6 @@ fun NoteDetailScreen(
         )
     }
 
-    // Export Dialog
     if (showExportDialog) {
         AlertDialog(
             onDismissRequest = { showExportDialog = false },

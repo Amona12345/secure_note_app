@@ -9,6 +9,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.securenotes.DependencyContainer
+import com.example.securenotes.ui.screens.NoteDetailScreen
+import com.example.securenotes.ui.screens.NoteEditScreen
+import com.example.securenotes.ui.screens.NotesListScreen
+import com.example.securenotes.ui.screens.SettingsScreen
 import com.example.securenotes.viewModel.NoteEditViewModel
 import com.example.securenotes.viewModel.NotesListViewModel
 @Composable
@@ -53,7 +57,7 @@ fun SecureNotesApp(dependencyContainer: DependencyContainer) {
             }
 
             NoteDetailScreen(
-                viewModel=viewModel,
+                viewModel = viewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToEdit = { navController.navigate("note_edit/$noteId") }
             )

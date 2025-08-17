@@ -1,5 +1,6 @@
 package com.example.securenotes.ui.splash
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -15,9 +16,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.securenotes.R
+import com.example.securenotes.ui.MainActivity
 import com.example.securenotes.ui.theme.SecureNotesTheme
 import kotlinx.coroutines.delay
-import com.example.securenotes.ui.theme.MainActivity
 
 class SplashScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +48,6 @@ fun SplashScreenContent(onTimeout: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            // 🔹 Your Image
             Image(
                 painter = painterResource(id = R.drawable.img),
                 contentDescription = "App Logo",

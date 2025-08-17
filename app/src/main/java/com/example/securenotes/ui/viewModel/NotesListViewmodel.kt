@@ -23,19 +23,15 @@ class NotesListViewModel(
     private val coreRepository: CoreNotesRepository
 ) : ViewModel() {
 
-    // Notes List State
     private val _notesState = MutableStateFlow<UiState<List<Note>>>(UiState.Loading)
     val notesState: StateFlow<UiState<List<Note>>> = _notesState.asStateFlow()
 
-    // Search State
     private val _searchState = MutableStateFlow<UiState<List<Note>>>(UiState.Empty)
     val searchState: StateFlow<UiState<List<Note>>> = _searchState.asStateFlow()
 
-    // Delete State
     private val _deleteNoteState = MutableStateFlow<UiState<Unit>?>(null)
     val deleteNoteState: StateFlow<UiState<Unit>?> = _deleteNoteState.asStateFlow()
 
-    // Password Dialog State
     private val _passwordDialogState = MutableStateFlow<PasswordDialogState>(PasswordDialogState.Hidden)
     val passwordDialogState: StateFlow<PasswordDialogState> = _passwordDialogState.asStateFlow()
 
@@ -57,7 +53,7 @@ class NotesListViewModel(
             _deleteNoteState.value = UiState.Loading
             _deleteNoteState.value = notesListRepository.deleteNote(note)
             if (_deleteNoteState.value is UiState.Success) {
-                loadNotes() // Refresh the list
+                loadNotes()
             }
         }
     }
@@ -74,24 +70,14 @@ class NotesListViewModel(
         }
     }
 
-    fun loadPrivateNotes() {
-        viewModelScope.launch {
-            _notesState.value = UiState.Loading
-            notesListRepository.getPrivateNotesProjection().collect { state ->
-                _notesState.value = state
-            }
-        }
-    }
+
 
     fun clearSearch() {
         _searchState.value = UiState.Empty
     }
 
-    fun clearDeleteNoteState() {
-        _deleteNoteState.value = null
-    }
 
-    // Password management
+
     fun setPassword(password: String) {
         viewModelScope.launch {
             coreRepository.setPassword(password)
@@ -101,13 +87,7 @@ class NotesListViewModel(
 
     fun verifyPassword(password: String): Boolean = coreRepository.verifyPassword(password)
 
-    fun showPasswordDialog() {
-        _passwordDialogState.value = if (coreRepository.hasPassword()) {
-            PasswordDialogState.EnterPassword
-        } else {
-            PasswordDialogState.SetupPassword
-        }
-    }
+
 
     fun hidePasswordDialog() {
         _passwordDialogState.value = PasswordDialogState.Hidden

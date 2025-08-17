@@ -1,4 +1,4 @@
-package com.example.securenotes.ui.theme
+package com.example.securenotes.ui.items
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text

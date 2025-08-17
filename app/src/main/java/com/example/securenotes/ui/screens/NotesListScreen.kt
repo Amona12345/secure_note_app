@@ -1,4 +1,4 @@
-package com.example.securenotes.ui.theme
+package com.example.securenotes.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +36,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.securenotes.UiState
 import com.example.securenotes.data.db.entities.Note
+import com.example.securenotes.ui.theme.EmptyNotesView
+import com.example.securenotes.ui.theme.EmptySearchView
+import com.example.securenotes.ui.theme.ErrorView
+import com.example.securenotes.ui.theme.LoadingView
+import com.example.securenotes.ui.theme.NoteItem
+import com.example.securenotes.ui.theme.PasswordDialog
 import com.example.securenotes.viewModel.NotesListViewModel
 import com.example.securenotes.viewModel.SettingsViewModel
 
@@ -58,7 +64,6 @@ fun NotesListScreen(
     var showDeleteDialog by remember { mutableStateOf<Note?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Top App Bar
         TopAppBar(
             title = {
                 if (showSearch) {
@@ -102,7 +107,6 @@ fun NotesListScreen(
             }
         )
 
-        // Notes Content
         Box(modifier = Modifier.weight(1f)) {
             val displayState = if (searchQuery.isNotEmpty()) searchState else notesState
 
@@ -143,7 +147,6 @@ fun NotesListScreen(
                 }
             }
 
-            // Floating Action Button
             FloatingActionButton(
                 onClick = onNavigateToAddNote,
                 modifier = Modifier
@@ -155,7 +158,6 @@ fun NotesListScreen(
         }
     }
 
-    // Delete Confirmation Dialog
     showDeleteDialog?.let { note ->
         AlertDialog(
             onDismissRequest = { showDeleteDialog = null },
@@ -179,7 +181,6 @@ fun NotesListScreen(
         )
     }
 
-    // Password Dialog
     PasswordDialog(
         state = passwordDialogState,
         onPasswordSet = { password -> viewModel.setPassword(password) },

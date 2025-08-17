@@ -1,6 +1,5 @@
-package com.example.securenotes.ui.theme
+package com.example.securenotes.ui.screens
 
-import android.widget.Switch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
@@ -27,7 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.room.jarjarred.org.antlr.v4.codegen.model.Sync
+import com.example.securenotes.ui.theme.PasswordDialog
+import com.example.securenotes.ui.theme.SettingItem
+import com.example.securenotes.ui.theme.SettingsSection
+
 import com.example.securenotes.viewModel.SettingsViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -171,7 +172,6 @@ fun SettingsScreen(
         }
     }
 
-    // Password Dialog
     PasswordDialog(
         state = passwordDialogState,
         onPasswordSet = { password -> viewModel.setPassword(password) },

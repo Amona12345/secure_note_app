@@ -1,5 +1,6 @@
 package com.example.securenotes.viewModel
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -28,6 +29,9 @@ class NoteDetailViewModel(
     private val _exportState = MutableStateFlow<UiState<Unit>?>(null)
     val exportState: StateFlow<UiState<Unit>?> = _exportState.asStateFlow()
 
+    private val _isUnlocked = MutableStateFlow(false)
+    val isUnlocked: StateFlow<Boolean> = _isUnlocked.asStateFlow()
+
     init {
         loadNote()
     }
@@ -36,6 +40,14 @@ class NoteDetailViewModel(
         viewModelScope.launch {
             noteDetailRepository.getNoteById(noteId).collect { state ->
                 _uiState.value = state
+                if (state is UiState.Success) {
+                    val note = state.data
+                    if (note == null || !note.isPrivate) {
+                        _isUnlocked.value = true
+                    } else {
+                        _isUnlocked.value = false
+                    }
+                }
             }
         }
     }
@@ -50,7 +62,7 @@ class NoteDetailViewModel(
         }
     }
 
-    fun exportNote(uri: android.net.Uri) {
+    fun exportNote(uri: Uri) {
         viewModelScope.launch {
             val currentNote = (_uiState.value as? UiState.Success)?.data
             if (currentNote != null) {
@@ -62,23 +74,21 @@ class NoteDetailViewModel(
 
     fun unlockNote(password: String): Boolean {
         return if (noteDetailRepository.verifyPassword(password)) {
-            loadNote()
+            _isUnlocked.value = true
             true
         } else {
             false
         }
     }
 
-    fun isPasswordProtected(): Boolean {
+
+
+    fun canEdit(): Boolean {
         val note = (_uiState.value as? UiState.Success)?.data
-        return note?.let { noteDetailRepository.isPasswordProtected(it) } ?: false
+        return note != null && (!note.isPrivate || _isUnlocked.value)
     }
 
-    fun clearDeleteState() {
-        _deleteState.value = null
-    }
 
-    fun clearExportState() {
-        _exportState.value = null
-    }
+
+
 }

@@ -1,6 +1,6 @@
 package com.example.securenotes.data.repo
 
-import com.example.securenotes.data.EncryptionManager
+import com.example.securenotes.services.EncryptionManager
 import com.example.securenotes.data.db.dao.NoteDao
 import com.example.securenotes.data.db.entities.Note
 import kotlinx.coroutines.flow.Flow
@@ -20,7 +20,6 @@ class CoreNotesRepository(
 
     fun getPrivateNotesProjection(): Flow<List<Note>> = noteDao.getPrivateListProjection()
 
-    // Security methods
     fun isPasswordProtected(note: Note): Boolean = note.isPrivate && encryptionManager.hasPassword()
 
     fun verifyPassword(password: String): Boolean = encryptionManager.verifyPassword(password)

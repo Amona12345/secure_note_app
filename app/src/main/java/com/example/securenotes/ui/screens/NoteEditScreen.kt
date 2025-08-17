@@ -1,4 +1,4 @@
-package com.example.securenotes.ui.theme
+package com.example.securenotes.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Lock
@@ -39,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.securenotes.UiState
+import com.example.securenotes.ui.theme.PasswordDialog
 import com.example.securenotes.viewModel.NoteEditViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,7 +60,6 @@ fun NoteEditScreen(
 
     val isEditing = noteId != null
 
-    // Load existing note data
     LaunchedEffect(uiState) {
         if (uiState is UiState.Success && (uiState as UiState.Success).data != null) {
             val note = (uiState as UiState.Success).data
@@ -70,14 +69,12 @@ fun NoteEditScreen(
         }
     }
 
-    // Handle save success
     LaunchedEffect(saveState) {
         if (saveState is UiState.Success) {
             onNavigateBack()
         }
     }
 
-    // Auto-save functionality
     LaunchedEffect(title, body, isPrivate, category) {
         if (isEditing && settingsState.autoSave) {
             viewModel.autoSave(title, body, isPrivate, category)
@@ -185,7 +182,6 @@ fun NoteEditScreen(
                 }
             }
 
-            // Auto-save indicator
             if (settingsState.autoSave && isEditing) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -207,7 +203,6 @@ fun NoteEditScreen(
         }
     }
 
-    // Password Dialog
     PasswordDialog(
         state = passwordDialogState,
         onPasswordSet = { password -> viewModel.setPassword(password) },
@@ -215,10 +210,8 @@ fun NoteEditScreen(
         onDismiss = { viewModel.hidePasswordDialog() }
     )
 
-    // Error handling
     if (saveState is UiState.Error) {
         LaunchedEffect(saveState) {
-            // Show snackbar or error dialog
         }
     }
 }

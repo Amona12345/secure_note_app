@@ -66,7 +66,6 @@ class NoteEditViewModel(
 
             val currentNote = (_uiState.value as? UiState.Success)?.data
             val noteToSave = if (currentNote != null && currentNote.id != 0L) {
-                // Update existing note
                 currentNote.copy(
                     title = title,
                     body = body,
@@ -74,7 +73,6 @@ class NoteEditViewModel(
                     timestamp = System.currentTimeMillis()
                 )
             } else {
-                // Create new note
                 Note(
                     title = title,
                     body = body,
@@ -92,10 +90,8 @@ class NoteEditViewModel(
         val settings = settingsState.value
         if (!settings.autoSave) return
 
-        // Cancel previous auto-save job
         autoSaveJob?.cancel()
 
-        // Start new auto-save job with delay
         autoSaveJob = viewModelScope.launch {
             kotlinx.coroutines.delay(2000) // Wait 2 seconds before auto-saving
 
@@ -123,9 +119,7 @@ class NoteEditViewModel(
         _passwordDialogState.value = PasswordDialogState.Hidden
     }
 
-    fun clearSaveState() {
-        _saveState.value = null
-    }
+
 
     private fun createEmptyNote() = Note(
         id = 0,

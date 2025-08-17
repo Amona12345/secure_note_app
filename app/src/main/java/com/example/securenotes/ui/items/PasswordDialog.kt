@@ -1,6 +1,8 @@
 package com.example.securenotes.ui.theme
 
 import androidx.compose.runtime.Composable
+import com.example.securenotes.ui.items.PasswordEntryDialog
+import com.example.securenotes.ui.items.PasswordErrorDialog
 import com.example.securenotes.viewModel.PasswordDialogState
 
 @Composable
@@ -29,6 +31,6 @@ fun PasswordDialog(
                 onDismiss = onDismiss
             )
         }
-        else -> { /* Hidden */ }
+        else -> {  }
     }
 }

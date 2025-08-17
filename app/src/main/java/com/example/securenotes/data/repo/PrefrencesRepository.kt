@@ -2,20 +2,32 @@ package com.example.securenotes.data.repo
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import com.example.securenotes.UiState
 import com.example.securenotes.data.db.entities.UserPreferences
+import com.example.securenotes.services.UserPreferencesSerializer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
-class PreferencesRepository(
-    private val dataStore: DataStore<Preferences>
-) {
+
+
+class PreferencesRepository  (private val dataStore: DataStore<Preferences>) {
+
+    companion object {
+        private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
+
+        fun create(context: Context): PreferencesRepository {
+            return PreferencesRepository(context.dataStore)
+        }
+    }
 
     private object PreferencesKeys {
         val DARK_MODE = booleanPreferencesKey("dark_mode")
@@ -39,53 +51,48 @@ class PreferencesRepository(
             )
         }
 
-    suspend fun updateDarkMode(enabled: Boolean): UiState<Unit> = try {
+    suspend fun updateDarkMode(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.DARK_MODE] = enabled
         }
-        UiState.Success(Unit)
-    } catch (e: Exception) {
-        UiState.Error("Failed to update dark mode: ${e.message}", e)
     }
 
-    suspend fun updateFontSize(size: Int): UiState<Unit> = try {
+    suspend fun updateFontSize(size: Int) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.FONT_SIZE] = size
         }
-        UiState.Success(Unit)
-    } catch (e: Exception) {
-        UiState.Error("Failed to update font size: ${e.message}", e)
     }
 
-    suspend fun updateAutoSave(enabled: Boolean): UiState<Unit> = try {
+    suspend fun updateAutoSave(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.AUTO_SAVE] = enabled
         }
-        UiState.Success(Unit)
-    } catch (e: Exception) {
-        UiState.Error("Failed to update auto save: ${e.message}", e)
     }
 
-    // Migration from SharedPreferences
-    suspend fun migrateFromSharedPreferences(context: Context): UiState<Unit> = try {
-        val sharedPreferences = context.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
+    suspend fun migrateFromSharedPreferences(context: Context): UiState<Unit> {
+        return try {
+            val sharedPreferences = context.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
 
-        dataStore.edit { preferences ->
-            if (sharedPreferences.contains("dark_mode")) {
-                preferences[PreferencesKeys.DARK_MODE] = sharedPreferences.getBoolean("dark_mode", false)
+            if (sharedPreferences.all.isEmpty()) {
+                return UiState.Success(Unit)
             }
-            if (sharedPreferences.contains("font_size")) {
-                preferences[PreferencesKeys.FONT_SIZE] = sharedPreferences.getInt("font_size", 16)
+
+            dataStore.edit { preferences ->
+                if (sharedPreferences.contains("dark_mode")) {
+                    preferences[PreferencesKeys.DARK_MODE] = sharedPreferences.getBoolean("dark_mode", false)
+                }
+                if (sharedPreferences.contains("font_size")) {
+                    preferences[PreferencesKeys.FONT_SIZE] = sharedPreferences.getInt("font_size", 16)
+                }
+                if (sharedPreferences.contains("auto_save")) {
+                    preferences[PreferencesKeys.AUTO_SAVE] = sharedPreferences.getBoolean("auto_save", true)
+                }
             }
-            if (sharedPreferences.contains("auto_save")) {
-                preferences[PreferencesKeys.AUTO_SAVE] = sharedPreferences.getBoolean("auto_save", true)
-            }
+
+            sharedPreferences.edit().clear().apply()
+            UiState.Success(Unit)
+        } catch (e: Exception) {
+            UiState.Error(e.message ?: "Migration failed")
         }
-
-        // Clear old SharedPreferences after migration
-        sharedPreferences.edit().clear().apply()
-        UiState.Success(Unit)
-    } catch (e: Exception) {
-        UiState.Error("Migration failed: ${e.message}", e)
     }
 }
