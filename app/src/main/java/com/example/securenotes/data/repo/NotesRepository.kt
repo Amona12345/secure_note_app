@@ -1,8 +1,11 @@
 package com.example.securenotes.data.repo
 
+import android.content.Context
 import com.example.securenotes.UiState
 import com.example.securenotes.data.db.dao.NoteDao
 import com.example.securenotes.data.db.entities.Note
+import com.example.securenotes.security.NoteCipher
+import com.example.securenotes.security.SecurePrefs
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
@@ -12,7 +15,8 @@ import javax.inject.Singleton
 
 @Singleton
 class NotesRepository @Inject constructor(
-    private val noteDao: NoteDao
+    private val noteDao: NoteDao,
+    private val context: Context
 ) {
 
     fun getAllNotes(): Flow<UiState<List<Note>>> =
@@ -93,5 +97,16 @@ class NotesRepository @Inject constructor(
         } catch (e: Exception) {
             emit(UiState.Error("Search failed: ${e.message}", e))
         }
+    }
+    fun saveEncryptedNote(noteBody: String): ByteArray? {
+        val password = SecurePrefs.getPassword(context) ?: return null
+        val key = NoteCipher.generateKey(password)
+        return NoteCipher.encrypt(noteBody, key)
+    }
+
+    fun decryptNote(encryptedData: ByteArray): String? {
+        val password = SecurePrefs.getPassword(context) ?: return null
+        val key = NoteCipher.generateKey(password)
+        return NoteCipher.decrypt(encryptedData, key)
     }
 }

@@ -1,16 +1,24 @@
 package com.example.securenotes.viewModel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.securenotes.UiState
 import com.example.securenotes.data.db.entities.Note
 import com.example.securenotes.data.repo.NotesRepository
+
+import com.example.securenotes.security.NoteCipher
+import com.example.securenotes.security.SecurePrefs
+
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+import android.util.Base64
+
 
 @HiltViewModel
 class NotesViewModel @Inject constructor(
@@ -26,8 +34,8 @@ class NotesViewModel @Inject constructor(
     val currentNoteState: StateFlow<UiState<Note?>> = _currentNoteState.asStateFlow()
 
     // Note Operations States
-    private val _saveNoteState = MutableStateFlow<UiState<Unit>?>(null)
-    val saveNoteState: StateFlow<UiState<Unit>?> = _saveNoteState.asStateFlow()
+    private val _saveNoteState = MutableStateFlow<UiState< Long>?>(null)
+    val saveNoteState: StateFlow<UiState<Long>?> = _saveNoteState.asStateFlow()
 
     private val _deleteNoteState = MutableStateFlow<UiState<Unit>?>(null)
     val deleteNoteState: StateFlow<UiState<Unit>?> = _deleteNoteState.asStateFlow()
@@ -169,4 +177,55 @@ class NotesViewModel @Inject constructor(
             timestamp = System.currentTimeMillis() // Update timestamp on edit
         )
     }
+    // Encrypt note body قبل الحفظ لو هي Private
+    fun createPrivateNote(title: String, body: String, password: String): Note {
+        val encryptedBody = NoteCipher.encrypt(body, NoteCipher.generateKey(password))
+        return Note(
+            title = title,
+            body = encryptedBody.joinToString(separator = ",") { it.toString() }, // نخزن كـ String
+            timestamp = System.currentTimeMillis(),
+            isPrivate = true
+        )
+    }
+
+    // فك تشفير نص الملاحظة الخاصة
+    fun decryptPrivateNoteBody(note: Note, password: String): String? {
+        return try {
+            val bytes = note.body.split(",").map { it.toByte() }.toByteArray()
+            NoteCipher.decrypt(bytes, NoteCipher.generateKey(password))
+        } catch (e: Exception) {
+            null // لو الباسورد غلط أو أي مشكلة
+        }
+    }
+    fun saveNotePassword(password: String, context: Context) {
+        SecurePrefs.savePassword(context, password)
+    }
+
+    fun getSavedPassword(context: Context): String? {
+        return SecurePrefs.getPassword(context)
+    }
+    fun openPrivateNote(context: Context, note: Note, inputPassword: String): String? {
+        val prefs = SecurePrefs.getPrefs(context)
+        val savedPassword = prefs.getString("note_password", null) ?: return null
+
+        return if (inputPassword == savedPassword) {
+            val key = NoteCipher.generateKey(inputPassword)
+            val encryptedData = Base64.decode(note.body, Base64.DEFAULT)
+            NoteCipher.decrypt(encryptedData, key)
+        } else {
+            null // كلمة السر غلط
+        }
+    }
+    suspend fun savePrivateNote(context: Context, note: Note, repository: NotesRepository) {
+        val prefs = SecurePrefs.getPrefs(context)
+        val password = prefs.getString("note_password", null) ?: return
+
+        val key = NoteCipher.generateKey(password)
+        val encryptedBody = NoteCipher.encrypt(note.body, key)
+
+        val encryptedNote = note.copy(body = Base64.encodeToString(encryptedBody, Base64.DEFAULT))
+        repository.insertNote(encryptedNote)
+    }
+}
+
 }
