@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.securenotes.UiState
 import com.example.securenotes.data.db.entities.Note
 import com.example.securenotes.data.repo.NotesRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class NotesViewModel @Inject constructor(
@@ -65,7 +67,13 @@ class NotesViewModel @Inject constructor(
     fun saveNote(note: Note) {
         viewModelScope.launch {
             _saveNoteState.value = UiState.Loading
-            _saveNoteState.value = notesRepository.insertNote(note)
+            val result = notesRepository.insertNote(note)
+            _saveNoteState.value = when (result) {
+                is UiState.Success -> UiState.Success(Unit)
+                is UiState.Error -> UiState.Error(result.message)
+                UiState.Loading -> UiState.Loading
+                UiState.Empty -> UiState.Empty
+            }
             loadNotes() // Refresh the list
         }
     }
@@ -74,7 +82,13 @@ class NotesViewModel @Inject constructor(
     fun updateNote(note: Note) {
         viewModelScope.launch {
             _updateNoteState.value = UiState.Loading
-            _updateNoteState.value = notesRepository.updateNote(note)
+            val result = notesRepository.updateNote(note)
+            _updateNoteState.value = when (result) {
+                is UiState.Success -> UiState.Success(Unit)
+                is UiState.Error -> UiState.Error(result.message)
+                UiState.Loading -> UiState.Loading
+                UiState.Empty -> UiState.Empty
+            }
             loadNotes() // Refresh the list
         }
     }
@@ -83,7 +97,13 @@ class NotesViewModel @Inject constructor(
     fun deleteNote(note: Note) {
         viewModelScope.launch {
             _deleteNoteState.value = UiState.Loading
-            _deleteNoteState.value = notesRepository.deleteNote(note)
+            val result = notesRepository.deleteNote(note)
+            _deleteNoteState.value = when (result) {
+                is UiState.Success -> UiState.Success(Unit)
+                is UiState.Error -> UiState.Error(result.message)
+                UiState.Loading -> UiState.Loading
+                UiState.Empty -> UiState.Empty
+            }
             loadNotes() // Refresh the list
         }
     }
