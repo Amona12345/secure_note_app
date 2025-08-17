@@ -1,26 +1,18 @@
 package com.example.securenotes.data.repo
 
-import android.content.Context
 import com.example.securenotes.UiState
-import com.example.securenotes.data.db.dao.NoteDao
 import com.example.securenotes.data.db.entities.Note
-import com.example.securenotes.security.NoteCipher
-import com.example.securenotes.security.SecurePrefs
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class NotesRepository @Inject constructor(
-    private val noteDao: NoteDao,
-    private val context: Context
+class NotesListRepository(
+    private val coreRepository: CoreNotesRepository
 ) {
 
     fun getAllNotes(): Flow<UiState<List<Note>>> =
-        noteDao.getAll()
+        coreRepository.getAllNotes()
             .map<List<Note>, UiState<List<Note>>> { notes ->
                 if (notes.isEmpty()) {
                     UiState.Empty
@@ -32,43 +24,15 @@ class NotesRepository @Inject constructor(
                 emit(UiState.Error("Failed to load notes: ${throwable.message}", throwable))
             }
 
-    fun getNoteById(id: Long): Flow<UiState<Note?>> = flow {
-        emit(UiState.Loading)
-        try {
-            val note = noteDao.getById(id)
-            if (note != null) {
-                emit(UiState.Success(note))
-            } else {
-                emit(UiState.Error("Note not found"))
-            }
-        } catch (e: Exception) {
-            emit(UiState.Error("Failed to load note: ${e.message}", e))
-        }
-    }
-
-    suspend fun insertNote(note: Note): UiState<Long> = try {
-        val id = noteDao.insert(note)
-        UiState.Success(id)
-    } catch (e: Exception) {
-        UiState.Error("Failed to save note: ${e.message}", e)
-    }
-
     suspend fun deleteNote(note: Note): UiState<Unit> = try {
-        noteDao.delete(note)
+        coreRepository.deleteNote(note)
         UiState.Success(Unit)
     } catch (e: Exception) {
         UiState.Error("Failed to delete note: ${e.message}", e)
     }
 
-    suspend fun updateNote(note: Note): UiState<Unit> = try {
-        noteDao.insert(note) // Using insert with REPLACE strategy
-        UiState.Success(Unit)
-    } catch (e: Exception) {
-        UiState.Error("Failed to update note: ${e.message}", e)
-    }
-
     fun getPrivateNotesProjection(): Flow<UiState<List<Note>>> =
-        noteDao.getPrivateListProjection()
+        coreRepository.getPrivateNotesProjection()
             .map<List<Note>, UiState<List<Note>>> { notes ->
                 if (notes.isEmpty()) {
                     UiState.Empty
@@ -83,7 +47,7 @@ class NotesRepository @Inject constructor(
     fun searchNotes(query: String): Flow<UiState<List<Note>>> = flow {
         emit(UiState.Loading)
         try {
-            noteDao.getAll().collect { allNotes ->
+            coreRepository.getAllNotes().collect { allNotes ->
                 val filteredNotes = allNotes.filter { note ->
                     note.title.contains(query, ignoreCase = true) ||
                             note.body.contains(query, ignoreCase = true)
@@ -97,16 +61,5 @@ class NotesRepository @Inject constructor(
         } catch (e: Exception) {
             emit(UiState.Error("Search failed: ${e.message}", e))
         }
-    }
-    fun saveEncryptedNote(noteBody: String): ByteArray? {
-        val password = SecurePrefs.getPassword(context) ?: return null
-        val key = NoteCipher.generateKey(password)
-        return NoteCipher.encrypt(noteBody, key)
-    }
-
-    fun decryptNote(encryptedData: ByteArray): String? {
-        val password = SecurePrefs.getPassword(context) ?: return null
-        val key = NoteCipher.generateKey(password)
-        return NoteCipher.decrypt(encryptedData, key)
     }
 }
